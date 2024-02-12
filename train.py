@@ -28,7 +28,7 @@ def draw_ellipse(arr, thickness, colour, major_axis_radius, minor_axis_radius, a
 
 
 def resize_img_data(width, arr, data):
-    data = data = data.tolist()
+    data = data.tolist()
     major_axis_radius, minor_axis_radius, angle, center_x, center_y, x = data
 
     H, W, _ = arr.shape
@@ -63,7 +63,6 @@ def get_img_dict():
         with open(anno_filepath, 'r') as f:
             lines = list(f)
             for idx, line in enumerate(lines):
-                # print(line.strip(), idx)
                 if line.strip().isdigit():
                     n = int(line.strip())
                     if n != 1:
@@ -109,7 +108,7 @@ def main():
 
     model.summary()
 
-    model.fit(x_train, y_train, batch_size=32, epochs=20, running_mean_size=200, save_filepath='training.ptd')
+    model.fit(x_train, y_train, batch_size=16, epochs=20, running_mean_size=200, save_filepath='training.ptd')
 
 
 if __name__ == '__main__':
