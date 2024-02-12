@@ -109,7 +109,7 @@ def main():
 
     model.summary()
 
-    model.fit(x_train, y_train, batch_size=32, epochs=20, running_mean_size=200, save_filepath='training.ptd', metrics=['accuracy'])
+    model.fit(x_train, y_train, batch_size=32, epochs=20, running_mean_size=200, save_filepath='training.ptd')
 
 
 if __name__ == '__main__':
