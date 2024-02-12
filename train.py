@@ -72,12 +72,6 @@ def get_img_dict():
                     filepath = 'faces-img/' + lines[idx - 1].strip() + '.jpg'
                     data = np.array(lines[idx + 1].strip().split(' ')[:5] + ['1'], dtype=np.float64)
                     img_dict[filepath] = data
-
-    # Shuffle dict
-    l = list(img_dict.items())
-    random.shuffle(l)
-    img_dict = dict(l)
-
     return img_dict
 
 
