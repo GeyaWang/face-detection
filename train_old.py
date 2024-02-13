@@ -1,5 +1,4 @@
 import numpy as np
-import random
 from PIL import Image
 import math
 
@@ -11,25 +10,9 @@ from nn.optimisers import Adam
 from nn.losses import MeanSquaredError
 
 
-def draw_ellipse(arr, thickness, colour, major_axis_radius, minor_axis_radius, angle, center_x, center_y):
-    cos_angle = np.cos(-angle)
-    sin_angle = np.sin(-angle)
-
-    for y in range(arr.shape[0]):
-        for x in range(arr.shape[1]):
-            x_shifted = x - center_x
-            y_shifted = y - center_y
-
-            x_rotated = x_shifted * cos_angle - y_shifted * sin_angle
-            y_rotated = x_shifted * sin_angle + y_shifted * cos_angle
-
-            if 1 > (x_rotated / major_axis_radius) ** 2 + (y_rotated / minor_axis_radius) ** 2 > 1 - thickness:
-                arr[y, x] = colour
-
-
 def resize_img_data(width, arr, data):
     data = data.tolist()
-    major_axis_radius, minor_axis_radius, angle, center_x, center_y, x = data
+    major_axis_radius, minor_axis_radius, angle, center_x, center_y= data
 
     H, W, _ = arr.shape
     scale = width / max(H, W)
@@ -51,7 +34,7 @@ def resize_img_data(width, arr, data):
     center_x += pad_y
     center_y += pad_x
 
-    return arr, np.array([major_axis_radius, minor_axis_radius, angle, center_x, center_y, x])
+    return arr, np.array([major_axis_radius, minor_axis_radius, angle, center_x, center_y])
 
 
 def get_img_dict():
@@ -69,7 +52,7 @@ def get_img_dict():
                         continue
 
                     filepath = 'faces-img/' + lines[idx - 1].strip() + '.jpg'
-                    data = np.array(lines[idx + 1].strip().split(' ')[:5] + ['1'], dtype=np.float64)
+                    data = np.array(lines[idx + 1].strip().split(' ')[:5], dtype=np.float64)
                     img_dict[filepath] = data
     return img_dict
 
@@ -100,9 +83,8 @@ def main():
     model.add(MaxPooling2D())
     model.add(Flatten())
     model.add(Dropout(0.5))
-    model.add(Dense(256))
     model.add(Dense(128))
-    model.add(Dense(6))
+    model.add(Dense(5))
 
     model.compile(Adam(), MeanSquaredError())
 
