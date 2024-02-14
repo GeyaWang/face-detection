@@ -4,13 +4,12 @@ from PIL import Image
 
 # https://github.com/GeyaWang/py-nn.git
 from nn.models import Sequential
-from nn.layers import Conv2D, Dense, Activation, Flatten, Dropout, MaxPooling2D, Reshape
+from nn.layers import Conv2D, Dense, Activation, Flatten, Dropout, MaxPooling2D
 from nn.activations import ReLU, Sigmoid
 from nn.optimisers import Adam
 from nn.losses import MeanSquaredError
 
-IMG_WIDTH = 216
-MAX_FACES = 1
+IMG_WIDTH = 224
 
 
 def process_img(img):
@@ -38,7 +37,7 @@ def get_training_data():
     x_train = []
     y_train = []
 
-    for i in range(N):
+    for i in range(100):
         print(f'\rProcessing images {i}/{N}', end='')
 
         img = training[i]['image']
@@ -56,12 +55,6 @@ def get_training_data():
 
         x_train.append(np.array(img))
         y_train.append(rel_bbox)
-
-        # img_draw = ImageDraw.Draw(img)
-        # for x, y, w, h in bboxes:
-        #     img_draw.rectangle((x, y, x + w, y + h), outline='red')
-        #
-        # img.show()
 
     print('\rDone.')
     return np.array(x_train), np.array(y_train)
@@ -85,7 +78,7 @@ def main():
     model.add(Dense(128))
     model.add(Dense(64))
     model.add(Dense(32))
-    model.add(Dense(MAX_FACES * 4))
+    model.add(Dense(4))
     model.add(Activation(Sigmoid()))
 
     model.compile(Adam(), MeanSquaredError())
