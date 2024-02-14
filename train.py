@@ -1,19 +1,19 @@
 import numpy as np
 from datasets import load_dataset
-from PIL import Image, ImageDraw
+from PIL import Image
 
 # https://github.com/GeyaWang/py-nn.git
 from nn.models import Sequential
 from nn.layers import Conv2D, Dense, Activation, Flatten, Dropout, MaxPooling2D, Reshape
-from nn.activations import ReLU
+from nn.activations import ReLU, Sigmoid
 from nn.optimisers import Adam
 from nn.losses import MeanSquaredError
 
-IMG_WIDTH = 224
-MAX_FACES = 3
+IMG_WIDTH = 216
+MAX_FACES = 1
 
 
-def process_img_bboxes(img, bboxes):
+def process_img(img):
     W, H = img.size
     scale = IMG_WIDTH / max(H, W)
 
@@ -25,10 +25,7 @@ def process_img_bboxes(img, bboxes):
     pad_x = (max(H, W) - W) // 2
     arr = np.pad(arr, ((pad_y, IMG_WIDTH - H - pad_y), (pad_x, IMG_WIDTH - W - pad_x), (0, 0)))
 
-    for i, (x, y, w, h) in enumerate(bboxes):
-        bboxes[i] = (x * scale + pad_x, y * scale + pad_y, w * scale, h * scale)
-
-    return Image.fromarray(arr), bboxes
+    return Image.fromarray(arr)
 
 
 def get_training_data():
@@ -38,19 +35,27 @@ def get_training_data():
 
     N = len(training)
 
-    x_train = np.zeros((N, IMG_WIDTH, IMG_WIDTH, 3))
-    y_train = np.zeros((N, MAX_FACES, 4))
+    x_train = []
+    y_train = []
 
     for i in range(N):
+        print(f'\rProcessing images {i}/{N}', end='')
+
         img = training[i]['image']
-        bboxes = training[i]['faces']['bbox'][:MAX_FACES]
+        bbox = training[i]['faces']['bbox']
 
-        img, bboxes = process_img_bboxes(img, bboxes)
+        # only one face
+        if len(bbox) > 1:
+            continue
 
-        x_train[i] = np.array(img)
+        W, H = img.size
+        x, y, w, h = bbox[0]
+        rel_bbox = [x / W, y / H, w / W, h / H]
 
-        for idx, bbox in enumerate(bboxes):
-            y_train[i, idx] = bbox
+        img = process_img(img)
+
+        x_train.append(np.array(img))
+        y_train.append(rel_bbox)
 
         # img_draw = ImageDraw.Draw(img)
         # for x, y, w, h in bboxes:
@@ -58,28 +63,30 @@ def get_training_data():
         #
         # img.show()
 
-    print('     Done.')
-    return x_train, y_train
+    print('\rDone.')
+    return np.array(x_train), np.array(y_train)
 
 
 def main():
     x_train, y_train = get_training_data()
 
     model = Sequential()
-    model.add(Conv2D(128, 5, input_shape=(IMG_WIDTH, IMG_WIDTH, 3)))
-    model.add(Activation(ReLU()))
-    model.add(MaxPooling2D())
-    model.add(Conv2D(64, 3))
+    model.add(Conv2D(16, 5, input_shape=(IMG_WIDTH, IMG_WIDTH, 3)))
     model.add(Activation(ReLU()))
     model.add(MaxPooling2D())
     model.add(Conv2D(32, 3))
     model.add(Activation(ReLU()))
     model.add(MaxPooling2D())
+    model.add(Conv2D(64, 3))
+    model.add(Activation(ReLU()))
+    model.add(MaxPooling2D())
     model.add(Flatten())
     model.add(Dropout(0.5))
     model.add(Dense(128))
+    model.add(Dense(64))
+    model.add(Dense(32))
     model.add(Dense(MAX_FACES * 4))
-    model.add(Reshape((MAX_FACES, 4)))
+    model.add(Activation(Sigmoid()))
 
     model.compile(Adam(), MeanSquaredError())
 
